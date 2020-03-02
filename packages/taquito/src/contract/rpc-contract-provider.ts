@@ -14,7 +14,7 @@ import {
 } from '../operations/types';
 import { Contract } from './contract';
 import { InvalidDelegationSource } from './errors';
-import { ContractProvider, ContractSchema, EstimationProvider } from './interface';
+import { ContractProvider, ContractSchema, EstimationProvider, StorageProvider } from './interface';
 import {
   createOriginationOperation,
   createRegisterDelegateOperation,
@@ -23,7 +23,7 @@ import {
 } from './prepare';
 import { smartContractAbstractionSemantic } from './semantic';
 
-export class RpcContractProvider extends OperationEmitter implements ContractProvider {
+export class RpcContractProvider extends OperationEmitter implements ContractProvider, StorageProvider {
   constructor(context: Context, private estimator: EstimationProvider) {
     super(context);
   }
@@ -202,9 +202,9 @@ export class RpcContractProvider extends OperationEmitter implements ContractPro
     return new TransactionOperation(hash, operation, source, forgedBytes, opResponse, context);
   }
 
-  async at(address: string): Promise<Contract> {
+  async at(address: string): Promise<Contract<ContractProvider>> {
     const script = await this.rpc.getScript(address);
     const entrypoints = await this.rpc.getEntrypoints(address);
-    return new Contract(address, script, this, entrypoints);
+    return new Contract(address, script, this, this, entrypoints);
   }
 }

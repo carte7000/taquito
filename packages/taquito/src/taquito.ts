@@ -18,6 +18,8 @@ import { RpcTzProvider } from './tz/rpc-tz-provider';
 import { Forger } from './forger/interface';
 import { RpcForger } from './forger/rpc-forger';
 import { RPCBatchProvider } from './batch/rpc-batch-provider';
+import { LegacyWallet } from './wallet/legacy';
+import { WalletProvider } from './wallet/interface';
 
 export * from './query/interface';
 export * from './signer/interface';
@@ -40,6 +42,9 @@ export {
   TezosOperationErrorWithMessage,
   TezosPreapplyFailureError,
 } from './operations/operation-errors';
+
+export { TezBridgeWallet } from './wallet/tezbridge'
+export { BeaconWallet } from './wallet/beacon'
 
 export { SubscribeProvider } from './subscribe/interface';
 export interface SetProviderOptions {
@@ -67,6 +72,7 @@ export class TezosToolkit {
   private _tz = new RpcTzProvider(this._context);
   private _estimate = new RPCEstimateProvider(this._context);
   private _contract = new RpcContractProvider(this._context, this._estimate);
+  private _wallet = this.getFactory(LegacyWallet)(this.contract)
   private _batch = new RPCBatchProvider(this._context, this._estimate);
 
   public readonly format = format;
@@ -154,6 +160,10 @@ export class TezosToolkit {
    */
   get contract(): ContractProvider {
     return this._contract;
+  }
+
+  get wallet(): WalletProvider {
+    return this._wallet;
   }
 
   public batch = this._batch.batch.bind(this._batch);

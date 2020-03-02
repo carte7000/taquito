@@ -1,8 +1,10 @@
 import { ParameterSchema, Schema } from '@taquito/michelson-encoder';
 import { EntrypointsResponse, ScriptResponse } from '@taquito/rpc';
-import { ContractProvider } from './interface';
+import { ContractProvider, StorageProvider } from './interface';
 import { InvalidParameterError } from './errors';
 import { TransferParams } from '../operations/types';
+import { WalletProvider, WalletOperation } from '../wallet/interface';
+import { TransactionOperation } from '../operations/transaction-operation';
 
 interface SendParams {
   fee?: number;
@@ -16,16 +18,16 @@ const DEFAULT_SMART_CONTRACT_METHOD_NAME = 'main';
 /**
  * @description Utility class to send smart contract operation
  */
-export class ContractMethod {
+export class ContractMethod<T extends ContractProvider | WalletProvider> {
   constructor(
-    private provider: ContractProvider,
+    private provider: T,
     private address: string,
     private parameterSchema: ParameterSchema,
     private name: string,
     private args: any[],
     private isMultipleEntrypoint = true,
     private isAnonymous = false
-  ) {}
+  ) { }
 
   /**
    * @description Get the schema of the smart contract method
@@ -42,8 +44,8 @@ export class ContractMethod {
    *
    * @param Options generic operation parameter
    */
-  send(params: Partial<SendParams> = {}) {
-    return this.provider.transfer(this.toTransferParams(params));
+  send(params: Partial<SendParams> = {}): Promise<T extends WalletProvider ? WalletOperation : TransactionOperation> {
+    return this.provider.transfer(this.toTransferParams(params)) as any;
   }
 
   toTransferParams({
@@ -77,16 +79,20 @@ const validateArgs = (args: any[], schema: ParameterSchema, name: string) => {
   }
 };
 
+export type LegacyContract = Contract<ContractProvider>;
+export type WalletContract = Contract<WalletProvider>;
+
+
 /**
  * @description Smart contract abstraction
  */
-export class Contract {
+export class Contract<T extends ContractProvider | WalletProvider> {
   /**
    * @description Contains methods that are implemented by the target Tezos Smart Contract, and offers the user to call the Smart Contract methods as if they were native TS/JS methods.
    * NB: if the contract contains annotation it will include named properties; if not it will be indexed by a number.
    *
    */
-  public methods: { [key: string]: (...args: any[]) => ContractMethod } = {};
+  public methods: { [key: string]: (...args: any[]) => ContractMethod<T> } = {};
 
   public readonly schema: Schema;
 
@@ -95,7 +101,8 @@ export class Contract {
   constructor(
     public readonly address: string,
     public readonly script: ScriptResponse,
-    private provider: ContractProvider,
+    private provider: T,
+    private storageProvider: StorageProvider,
     private entrypoints: EntrypointsResponse
   ) {
     this.schema = Schema.fromRPCResponse({ script: this.script });
@@ -105,7 +112,7 @@ export class Contract {
 
   private _initializeMethods(
     address: string,
-    provider: ContractProvider,
+    provider: T,
     entrypoints: {
       [key: string]: object;
     }
@@ -114,14 +121,14 @@ export class Contract {
     const keys = Object.keys(entrypoints);
     if (parameterSchema.isMultipleEntryPoint) {
       keys.forEach(smartContractMethodName => {
-        const method = function(...args: any[]) {
+        const method = function (...args: any[]) {
           const smartContractMethodSchema = new ParameterSchema(
             entrypoints[smartContractMethodName]
           );
 
           validateArgs(args, smartContractMethodSchema, smartContractMethodName);
 
-          return new ContractMethod(
+          return new ContractMethod<T>(
             provider,
             address,
             smartContractMethodSchema,
@@ -139,13 +146,13 @@ export class Contract {
       );
 
       anonymousMethods.forEach(smartContractMethodName => {
-        const method = function(...args: any[]) {
+        const method = function (...args: any[]) {
           validateArgs(
             [smartContractMethodName, ...args],
             parameterSchema,
             smartContractMethodName
           );
-          return new ContractMethod(
+          return new ContractMethod<T>(
             provider,
             address,
             parameterSchema,
@@ -159,9 +166,9 @@ export class Contract {
       });
     } else {
       const smartContractMethodSchema = this.parameterSchema;
-      const method = function(...args: any[]) {
+      const method = function (...args: any[]) {
         validateArgs(args, parameterSchema, DEFAULT_SMART_CONTRACT_METHOD_NAME);
-        return new ContractMethod(
+        return new ContractMethod<T>(
           provider,
           address,
           smartContractMethodSchema,
@@ -178,7 +185,7 @@ export class Contract {
    * @description Return a friendly representation of the smart contract storage
    */
   public storage<T>() {
-    return this.provider.getStorage<T>(this.address, this.schema);
+    return this.storageProvider.getStorage<T>(this.address, this.schema);
   }
 
   /**
@@ -189,6 +196,6 @@ export class Contract {
    */
   public bigMap(key: string) {
     // tslint:disable-next-line: deprecation
-    return this.provider.getBigMapKey(this.address, key, this.schema);
+    return this.storageProvider.getBigMapKey(this.address, key, this.schema);
   }
 }
