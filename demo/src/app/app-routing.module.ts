@@ -10,6 +10,8 @@ import { NewContractComponent } from './pages/new-contract/new-contract.componen
 import { NewContractModule } from './pages/new-contract/new-contract.module';
 import { PageNotFoundComponent } from './pages/page-not-found/page-not-found.component';
 import { PageNotFoundModule } from './pages/page-not-found/page-not-found.module';
+import { AccountModule } from './pages/account/account.module';
+import { AccountComponent } from './pages/account/account.component';
 
 const routes: Routes = [
   ...Network.values().map(network => ({
@@ -26,6 +28,10 @@ const routes: Routes = [
     component: NewContractComponent,
   },
   {
+    path: 'account',
+    component: AccountComponent,
+  },
+  {
     path: '**',
     component: PageNotFoundComponent,
   },
@@ -36,9 +42,10 @@ const routes: Routes = [
     HomeModule,
     NewContractModule,
     ContractDetailsModule,
+    AccountModule,
     PageNotFoundModule,
     RouterModule.forRoot(routes),
   ],
   exports: [RouterModule],
 })
-export class AppRoutingModule {}
+export class AppRoutingModule { }

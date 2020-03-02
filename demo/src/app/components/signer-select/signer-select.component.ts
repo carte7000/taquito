@@ -17,7 +17,7 @@ export class SignerSelectComponent implements OnInit {
   @Output()
   public error: EventEmitter<any> = new EventEmitter();
 
-  constructor(private taquito: TaquitoService) {}
+  constructor(private taquito: TaquitoService) { }
 
   ngOnInit() {
     this.selectTezBridgeSigner();
@@ -59,5 +59,10 @@ export class SignerSelectComponent implements OnInit {
   selectTezBridgeSigner() {
     this.taquito.selectTezBridgeSigner();
     this.signer = Signer.TezBridge;
+  }
+
+  async selectBeacon() {
+    await this.taquito.selectBeaconWallet();
+    this.signer = Signer.Beacon;
   }
 }

@@ -56,7 +56,7 @@ code {
     private taquito: TaquitoService,
     private fb: FormBuilder,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.networkSelect.disable(this.unsupportedNetworks, true);

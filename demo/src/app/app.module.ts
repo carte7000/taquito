@@ -28,4 +28,4 @@ import { TaquitoService } from './taquito.service';
   providers: [TaquitoService, NetworkSelectService],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
+export class AppModule { }

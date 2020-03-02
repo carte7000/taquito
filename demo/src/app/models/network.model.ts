@@ -12,7 +12,7 @@ export namespace Network {
   export function getUrl(network: Network): string {
     return {
       [Network.Alphanet]: 'https://tezos-dev.cryptonomic-infra.tech',
-      [Network.Babylonnet]: 'https://babylonnet-node.tzscan.io',
+      [Network.Babylonnet]: 'https://api.tez.ie/rpc/babylonnet',
       [Network.Mainnet]: 'https://rpc.tezrpc.me',
     }[network];
   }
