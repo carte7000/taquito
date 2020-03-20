@@ -13,5 +13,11 @@ jobs:
     - run: npm run build
     - run: npm run lerna -- bootstrap
     - run: npm run lerna run build
+    - run: npm run lint
+    - run: npm run test -- --runInBand
+    - uses: codecov/codecov-action@v1
+      with:
+        file: .coverage/*.json
+    - run: cd integration-tests && npm run test
       env:
         CI: true
