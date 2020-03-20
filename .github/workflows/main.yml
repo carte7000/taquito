@@ -49,7 +49,7 @@ jobs:
         CI: true
   publish-docs:
     runs-on: ubuntu-latest
-    if: {{ github.ref == 'ref/head/master' }}
+    if: github.ref == 'ref/head/master'
     needs: [integration-tests, lint-and-test]
     steps:
     - uses: actions/checkout@v2
