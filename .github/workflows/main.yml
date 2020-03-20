@@ -44,19 +44,18 @@ jobs:
     - run: npm install
     - run: npm run lerna -- bootstrap
     - run: npm run build
-    - run: cd integration-tests
+    - run: cd integration-tests && npm run test
       env:
         CI: true
   publish-docs:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [10.x]
+    if: {{ github.ref == 'ref/head/master' }}
+    needs: [integration-tests, lint-and-test]
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node }}
+        node-version: 10.x
     - uses: actions/cache@v1
       with:
         path: ~/.npm
