@@ -10,9 +10,8 @@ jobs:
       with:
         node-version: 10.x
     - run: npm install
-    - run: npm run build
     - run: npm run lerna -- bootstrap
-    - run: npm run lerna run build
+    - run: npm run build
     - run: npm run lint
     - run: npm run test -- --runInBand
     - uses: codecov/codecov-action@v1
